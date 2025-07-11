@@ -1,4 +1,3 @@
-```python
 import unittest
 import numpy as np
 from collections import namedtuple
@@ -36,7 +35,7 @@ class TestEmojiLanguageAnalysis(unittest.TestCase):
 
     def test_train_naive_bayes(self):
         model = train_naive_bayes(self.x, self.rownames, self.colnames)
-        self.assertIsInstance(model, namedtuple)
+        self.assertTrue(hasattr(model, '_fields'))  # Check if model is a namedtuple
         self.assertEqual(len(model.classes), 2)
         self.assertEqual(model.features.size, 2)
         self.assertTrue((model.pxc >= 0).all())
@@ -55,4 +54,3 @@ class TestEmojiLanguageAnalysis(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
-```

@@ -1,4 +1,3 @@
-```python
 #!/usr/bin/env python3
 import csv
 from typing import Tuple, List, Dict
@@ -10,7 +9,7 @@ import matplotlib.pyplot as plt
 
 
 def load_data(file_path: str) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
-    """Load data from a tab-delimited file.
+    """ Dickinson Load data from a tab-delimited file.
 
     Args:
         file_path (str): Path to the input data file.
@@ -27,7 +26,12 @@ def load_data(file_path: str) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
             data = list(csv.reader(f, delimiter='\t'))
             if not data:
                 raise ValueError("Input file is empty.")
-            return np.array(data), np.array(data[0, 1:]), np.array(data[1:, 0])
+            # Extract column names (first row, excluding first element)
+            colnames = np.array(data[0][1:])
+            # Extract row names (first column, excluding first row)
+            rownames = np.array([row[0] for row in data[1:]])
+            # Convert full data to NumPy array
+            return np.array(data), colnames, rownames
     except FileNotFoundError as e:
         raise FileNotFoundError(f"Input file not found: {file_path}") from e
 
@@ -100,14 +104,17 @@ def predict_language(model: namedtuple, patterns: List[str], feature_idx: Dict[s
             raise KeyError(f"Pattern {p} not found in feature index.")
         xx[feature_idx[p]] = 1
 
-    res = np.zeros(model.pc.size, dtype={'names': ('class', 'logprob'), 'formats': ('U10', 'float')})
+    res = np.zeros(model.pc.size, dtype={'names': ('class', 'logprob'), 'formats': ('U10', 'f8')})
     res['class'] = model.classes
     res['logprob'] = np.log(model.pc)
     for i in range(len(xx)):
         if xx[i] > 0:
             for j in range(len(res)):
                 res['logprob'][j] += xx[i] * np.log(model.pxc[j, i])
-    return sorted(res, key=lambda x: x['logprob'], reverse=True)[:3]
+    
+    # Convert np.void to Python tuples
+    result = [(row['class'], row['logprob']) for row in res]
+    return sorted(result, key=lambda x: x[1], reverse=True)[:3]
 
 
 def generate_dendrogram(x: np.ndarray, labels: np.ndarray, output_path: str) -> None:
@@ -173,4 +180,3 @@ if __name__ == "__main__":
     output_path = sys.argv[2]
     pattern_list = sys.argv[3].split(',')
     main(input_path, output_path, pattern_list)
-```
